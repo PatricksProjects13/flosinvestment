@@ -48,15 +48,23 @@ class SavingPlanInvestmentStrategy:
 
     def simulate(self):
         for month_idx in range(1, self.duration_simulation * 12 + 1):
+            # Update reserve
+            monthly_interest_rate_on_reserves = convert_yearly_interest_to_monthly(
+                self.yearly_interest_rate_on_reserves)
+            self.reserves *= 1 + (monthly_interest_rate_on_reserves / 100) * (
+                    1 - self.capital_yields_tax_percentage / 100)  # Increase by interest rate minus tax
+            # Update portfolio
             if month_idx <= self.duration_accumulation_phase_in_years * 12:
-                # Update reserve
-                monthly_interest_rate_on_reserves = convert_yearly_interest_to_monthly(
-                    self.yearly_interest_rate_on_reserves)
-                self.reserves *= 1 + (monthly_interest_rate_on_reserves / 100) * (
-                        1 - self.capital_yields_tax_percentage / 100)  # Increase by interest rate minus tax
-                # Update portfolio
+                # Sparphase
                 if month_idx == 1:
                     self.portfolio.buy(money=self.initial_savings, cost_buy=self.costs_buy_absolute)
                 self.portfolio.buy(money=self.monthly_savings, cost_buy=self.costs_buy_absolute)
-                self.portfolio.next_month()
+            else:
+                # Auszahlphase
+                if self.portfolio.current_total_value > 0:
+                    returned_money = self.portfolio.sell(target_money_sell=self.monthly_payoff,
+                                                         transaction_costs=self.costs_sell_absolute)
+                else:
+                    self.reserves -= min(self.reserves, self.monthly_payoff)
+            self.portfolio.next_month()
             self.wealth_history[month_idx] = self.reserves + self.portfolio.current_total_value

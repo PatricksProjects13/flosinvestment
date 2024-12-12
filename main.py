@@ -44,7 +44,7 @@ def sidebar() -> SidebarResults:
         duration_accumulation_phase_in_years = st.number_input("Dauer Ansparphase (Jahre)", min_value=1, step=10,
                                                                value=20)
     with st.sidebar.expander("Inflation und Steuern"):
-        include_inflation = st.toggle("Inflation", value=True)
+        include_inflation = st.toggle("Inflation", value=False, disabled=True)
         if include_inflation:
             yearly_inflation_rate = st.number_input("Inflation (% pro Jahr)", min_value=0.0, max_value=100.0,
                                                     value=2.0,
@@ -55,7 +55,7 @@ def sidebar() -> SidebarResults:
         capital_yields_tax_percentage = st.number_input("Kapitalertragssteuer (%)", min_value=0, max_value=100,
                                                         value=25, step=1)
     with st.sidebar.expander("Auszahlphase"):
-        extract_all_at_once = st.toggle("Einmaliger Verkauf", value=False)
+        extract_all_at_once = st.toggle("Einmaliger Verkauf", value=False, disabled=True)
         monthly_payoff = st.number_input("Monatlicher Auszahlbetrag (€)", min_value=0, step=100, value=100)
 
     with st.sidebar.expander("Simulation"):
