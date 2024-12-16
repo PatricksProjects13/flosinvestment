@@ -14,5 +14,4 @@ class DeterministicSimulationModel(AbstractSimulationModel):
         self.monthly_interest_rate = convert_yearly_interest_to_monthly(yearly_interest_rate)
 
     def __call__(self, current_price: float) -> float:
-        print(f"Updating price with monthly interest rate: {self.monthly_interest_rate / 100}")
         return current_price * (1 + self.monthly_interest_rate / 100)

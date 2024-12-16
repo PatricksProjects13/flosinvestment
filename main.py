@@ -113,7 +113,7 @@ def main_bar(sidebar_results: SidebarResults):
                                                 extract_all_at_once=sidebar_results.extract_all_at_once,
                                                 monthly_payoff=sidebar_results.monthly_payoff)
         strategy.simulate()
-        st.line_chart(strategy.wealth_history)
+        st.line_chart(strategy.history, use_container_width=True, x_label="Monate", y_label="Wert (€)")
 
     else:
         st.error(f"Der Spartyp '{sidebar_results.strategy}' ist noch nicht implementiert!")

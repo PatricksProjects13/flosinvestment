@@ -122,7 +122,6 @@ class Portfolio:
                       purchasing_prize_per_unit=self.share_prize_per_unit.value,
                       units=money / self.share_prize_per_unit.value,
                       time_bought=(self.month, self.year))
-        print(f"Bought share. {share}")
         self.shares.append(share)
 
     def sell(self, target_money_sell: float, transaction_costs: float) -> float:
@@ -146,33 +145,42 @@ class Portfolio:
         # If selling costs more than the target return, sell nothing
         if target_money_sell < transaction_costs:
             return 0.0
-        returned_money = 0.0
+        # We collect the returned money from selling in the following variable
+        returned_money = 0.0  # Without tax and costs, has to be subtracted afterward
+        profit = 0.0
+        # Start selling shares, beginning from the first. We can sell fractions
         while True:
+            # If there are no shares, nothing to sell
             if not self.shares:
                 break
+            # Get oldest shares
             oldest_share = self.shares.pop(0)
             current_value = oldest_share.current_value
-            purchasing_value = oldest_share.purchasing_value
-            profit_share = current_value - purchasing_value
-            if profit_share < 0:
-                tax = 0.0
-                self.yearly_loss_pot += -profit_share
-            else:
-                profit_minus_loss_pot = profit_share - min(self.yearly_loss_pot, profit_share)
-                self.yearly_loss_pot -= min(profit_share, self.yearly_loss_pot)
-                profit_part_in_tax_free_allowance = min(self.remaining_yearly_tax_free_allowance, profit_minus_loss_pot)
-                profit_part_outside_tax_free_allowance = profit_minus_loss_pot - profit_part_in_tax_free_allowance
-                self.remaining_yearly_tax_free_allowance -= profit_part_in_tax_free_allowance
-                tax = profit_part_outside_tax_free_allowance * self.capital_yields_tax_percentage / 100.0
-            if current_value > target_money_sell - returned_money:
+            # If the share has more value than the target sell, only sell a fraction
+            if current_value > target_money_sell:
                 # Only sell a fraction:
-                selling_amount = (target_money_sell - returned_money) / oldest_share.current_prize_per_unit.value
-                oldest_share.units -= selling_amount
-                self.shares = [oldest_share] + self.shares
-                returned_money += current_value
+                selling_amount = target_money_sell / oldest_share.current_prize_per_unit.value
+                oldest_share.units -= selling_amount  # Reducer the number of units
+                self.shares = [oldest_share] + self.shares  # Add the share again to the history
+                profit += target_money_sell - selling_amount * oldest_share.purchasing_prize_per_unit
+                returned_money += target_money_sell
+                target_money_sell -= target_money_sell
                 break
-            returned_money += current_value - tax
-        return returned_money - transaction_costs
+            else:
+                profit += current_value - oldest_share.purchasing_value
+                returned_money += current_value
+                target_money_sell -= current_value
+        if profit < 0:
+            tax = 0.0
+            self.yearly_loss_pot += -profit
+        else:
+            profit_minus_loss_pot = profit - min(self.yearly_loss_pot, profit)
+            self.yearly_loss_pot -= min(profit, self.yearly_loss_pot)
+            profit_part_in_tax_free_allowance = min(self.remaining_yearly_tax_free_allowance, profit_minus_loss_pot)
+            profit_part_outside_tax_free_allowance = profit_minus_loss_pot - profit_part_in_tax_free_allowance
+            self.remaining_yearly_tax_free_allowance -= profit_part_in_tax_free_allowance
+            tax = profit_part_outside_tax_free_allowance * self.capital_yields_tax_percentage / 100.0
+        return returned_money - transaction_costs - tax
 
     def next_month(self):
         """
@@ -201,4 +209,6 @@ if __name__ == '__main__':
     portfolio.next_month()
     portfolio.buy(money=100, cost_buy=1)
     portfolio.next_month()
-    print(portfolio.current_total_value)
+    for _ in range(5):
+        rm = portfolio.sell(100, 1)
+        print(portfolio.current_total_value, rm)

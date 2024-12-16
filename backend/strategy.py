@@ -1,3 +1,5 @@
+import pandas as pd
+
 from backend.portfolio import Portfolio
 from backend.simulation import AbstractSimulationModel
 from backend.utils import convert_yearly_interest_to_monthly
@@ -42,9 +44,23 @@ class SavingPlanInvestmentStrategy:
                                               init_month=1,
                                               init_year=2024
                                               )
-        self.wealth_history = {0: reserves}  # Monthly current_value of the total wealth.
+        self.history = pd.DataFrame({"Wert Tagesgeld + ETF": [self.reserves],
+                                     "Eingezahlt (kumulativ)": [0],
+                                     "Ausgezahlter (kumulativ)": [0],
+                                     "Steuern (kumulativ)": [0],
+                                     "Kosten (kumulativ)": [0],
+                                     }, index=[0])  # Monthly current_value of the total wealth.
         # Convention: 1: (savings after 1 month + rate)
         # Order of actions in month m: Measure current_value, (extract all at once), add savings/ subtract payoff, add interest rate
+
+    def _add_entry_in_history(self, value: float, payed: float, payoff: float, tax: float, costs: float):
+        last_row = self.history.iloc[-1].to_list()
+        last_value, last_payed, last_payoff, last_tax, last_costs = last_row
+        self.history.loc[self.history.index.max() + 1] = [value,
+                                                          payed + last_payed,
+                                                          payoff + last_payoff,
+                                                          tax + last_tax,
+                                                          costs + last_costs]
 
     def simulate(self):
         for month_idx in range(1, self.duration_simulation * 12 + 1):
@@ -56,15 +72,24 @@ class SavingPlanInvestmentStrategy:
             # Update portfolio
             if month_idx <= self.duration_accumulation_phase_in_years * 12:
                 # Sparphase
+                returned_money = 0
+                payed_money = self.monthly_savings
                 if month_idx == 1:
                     self.portfolio.buy(money=self.initial_savings, cost_buy=self.costs_buy_absolute)
+                    payed_money += self.initial_savings
                 self.portfolio.buy(money=self.monthly_savings, cost_buy=self.costs_buy_absolute)
             else:
                 # Auszahlphase
+                payed_money = 0
                 if self.portfolio.current_total_value > 0:
                     returned_money = self.portfolio.sell(target_money_sell=self.monthly_payoff,
                                                          transaction_costs=self.costs_sell_absolute)
                 else:
-                    self.reserves -= min(self.reserves, self.monthly_payoff)
+                    returned_money = min(self.reserves, self.monthly_payoff)
+                    self.reserves -= returned_money
             self.portfolio.next_month()
-            self.wealth_history[month_idx] = self.reserves + self.portfolio.current_total_value
+            self._add_entry_in_history(value=self.reserves + self.portfolio.current_total_value,
+                                       payed=payed_money,
+                                       payoff=returned_money,
+                                       tax=0,
+                                       costs=0)  # TODO
