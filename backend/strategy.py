@@ -25,7 +25,6 @@ class SavingPlanInvestmentStrategy:
         # Store input parameters
         self.monthly_savings = monthly_savings
         self.initial_savings = initial_savings
-        self.reserves = reserves
         self.monthly_savings_reserves = monthly_savings_reserves
         self.capital_yields_tax_percentage = capital_yields_tax_percentage
         self.yearly_interest_rate_on_reserves = yearly_interest_rate_on_reserves
@@ -78,15 +77,16 @@ class SavingPlanInvestmentStrategy:
             # Update portfolio
             if month_idx <= self.duration_accumulation_phase_in_years * 12:
                 # Sparphase
-                # Tagesgeld
-                self.reserves += self.monthly_savings_reserves
-                # Aktien / ETFs
-                payed_money = self.monthly_savings + self.monthly_savings_reserves
+                payed_money = 0.0
                 if month_idx == 1:
                     payed_money += self.reserves
                     self.portfolio.buy(money=self.initial_savings, cost_buy=self.costs_buy_absolute)
                     transaction_costs += self.costs_buy_absolute
                     payed_money += self.initial_savings
+                # Tagesgeld
+                self.reserves += self.monthly_savings_reserves
+                # Aktien / ETFs
+                payed_money += self.monthly_savings + self.monthly_savings_reserves
                 self.portfolio.buy(money=self.monthly_savings, cost_buy=self.costs_buy_absolute)
                 transaction_costs += self.costs_buy_absolute
             else:

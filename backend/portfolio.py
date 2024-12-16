@@ -141,8 +141,8 @@ class Portfolio:
         :return: A tuple, containing the returned money, the payed taxes and the amount of transaction costs.
         :rtype: tuple[float, float, float]
         """
-        # If selling costs more than the target return, sell nothing
-        if target_money_sell < transaction_costs:
+        # If selling costs more than the target return or no shares, sell nothing
+        if target_money_sell < transaction_costs or not self.shares:
             return 0.0, 0.0, 0.0
         # We collect the returned money from selling in the following variable
         returned_money = 0.0  # Without tax and costs, has to be subtracted afterward
