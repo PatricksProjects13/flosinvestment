@@ -14,9 +14,10 @@ class DeterministicSimulationParameters:
 @dataclass
 class SidebarResults:
     strategy: Strategy  # Nach welchem Modell soll Geld gespart werden, Sparer, Flo,...
-    monthly_savings: int  # Monatliche Sparrate
-    initial_savings: int  # Anfänglicher, einmaliger Sparbetrag
+    monthly_savings: int  # Monatliche Sparrate in Aktien/ETFs
+    initial_savings: int  # Anfänglicher, einmaliger Sparbetrag in Aktien/ETFs
     reserves: int  # Sonstiger gesparter, aber verfügbarer Betrag (festverzinslichtes Tagesgeld)
+    monthly_savings_reserves: int # Sparbetrag auf das Tagesgeld
     yearly_interest_rate_on_reserves: float  # Jährlicher Zinssatz auf festverzinslichtes Tagesgeld
     costs_buy_absolute: float  # Kosten für den Kauf einer Aktie in Euro
     costs_sell_absolute: float  # Kosten für den Verkauf einer Aktie in Euro
@@ -35,9 +36,10 @@ class SidebarResults:
 def sidebar() -> SidebarResults:
     with st.sidebar.expander("Sparphase"):
         strategy = st.selectbox("Spartyp", options=Strategy)
-        monthly_savings = st.number_input("Monatlicher Sparbetrag (€)", min_value=0, step=50, value=100)
-        initial_savings = st.number_input("Initialer Sparbetrag (€)", min_value=0, step=1000, value=0)
-        reserves = st.number_input("Tagesgeld (€)", min_value=0, step=1000, value=1000)
+        initial_savings = st.number_input("Initialer Sparbetrag Aktie/ETF (€)", min_value=0, step=1000, value=0)
+        monthly_savings = st.number_input("Monatlicher Sparbetrag Aktie/ETF (€)", min_value=0, step=50, value=100)
+        reserves = st.number_input("Initialer Sparbetrag Tagesgeld (€)", min_value=0, step=1000, value=0)
+        monthly_savings_reserves = st.number_input("Monatlicher Sparbetrag Tagesgeld (€)", min_value=0, step=50, value=100)
         costs_buy_absolute = st.number_input("Kosten Kauf Aktie/ETF (€)", min_value=0.0, step=1.0, value=1.0)
         costs_sell_absolute = st.number_input("Kosten Verkauf Aktie/ETF (€)", min_value=0.0, step=1.0, value=1.0)
         yearly_interest_rate_on_reserves = st.number_input("Zinsen Tagesgeld (%)", step=1.0, value=2.0, min_value=0.0)
@@ -57,7 +59,6 @@ def sidebar() -> SidebarResults:
     with st.sidebar.expander("Auszahlphase"):
         extract_all_at_once = st.toggle("Einmaliger Verkauf", value=False, disabled=True)
         monthly_payoff = st.number_input("Monatlicher Auszahlbetrag (€)", min_value=0, step=100, value=100)
-
     with st.sidebar.expander("Simulation"):
         duration_simulation = st.number_input("Maximale Simulationsdauer (Jahre)", min_value=1, step=10, value=40,
                                               max_value=100)
@@ -77,6 +78,7 @@ def sidebar() -> SidebarResults:
                                      monthly_savings=monthly_savings,
                                      initial_savings=initial_savings,
                                      reserves=reserves,
+                                     monthly_savings_reserves=monthly_savings_reserves,
                                      costs_buy_absolute=costs_buy_absolute,
                                      costs_sell_absolute=costs_sell_absolute,
                                      yearly_interest_rate_on_reserves=yearly_interest_rate_on_reserves,
@@ -102,6 +104,7 @@ def main_bar(sidebar_results: SidebarResults):
         strategy = SavingPlanInvestmentStrategy(monthly_savings=sidebar_results.monthly_savings,
                                                 initial_savings=sidebar_results.initial_savings,
                                                 reserves=sidebar_results.reserves,
+                                                monthly_savings_reserves =sidebar_results.monthly_savings_reserves,
                                                 yearly_interest_rate_on_reserves=sidebar_results.yearly_interest_rate_on_reserves,
                                                 yearly_tax_free_allowance=sidebar_results.yearly_tax_free_allowance,
                                                 capital_yields_tax_percentage=sidebar_results.capital_yields_tax_percentage,
@@ -114,6 +117,7 @@ def main_bar(sidebar_results: SidebarResults):
                                                 monthly_payoff=sidebar_results.monthly_payoff)
         strategy.simulate()
         st.line_chart(strategy.history, use_container_width=True, x_label="Monate", y_label="Wert (€)")
+        st.dataframe(strategy.history, use_container_width=True)
 
     else:
         st.error(f"Der Spartyp '{sidebar_results.strategy}' ist noch nicht implementiert!")

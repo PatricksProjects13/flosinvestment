@@ -124,7 +124,7 @@ class Portfolio:
                       time_bought=(self.month, self.year))
         self.shares.append(share)
 
-    def sell(self, target_money_sell: float, transaction_costs: float) -> float:
+    def sell(self, target_money_sell: float, transaction_costs: float) -> tuple[float, float, float]:
         """
         Calculates and executes the sale of shares to achieve a target return after accounting
         for transaction costs and taxes. It handles shares based on their acquisition order,
@@ -138,13 +138,12 @@ class Portfolio:
         :type target_money_sell: float
         :param transaction_costs: Costs associated with executing the transaction.
         :type transaction_costs: float
-        :return: The net money returned after accounting for transaction costs
-            and applicable taxes.
-        :rtype: float
+        :return: A tuple, containing the returned money, the payed taxes and the amount of transaction costs.
+        :rtype: tuple[float, float, float]
         """
         # If selling costs more than the target return, sell nothing
         if target_money_sell < transaction_costs:
-            return 0.0
+            return 0.0, 0.0, 0.0
         # We collect the returned money from selling in the following variable
         returned_money = 0.0  # Without tax and costs, has to be subtracted afterward
         profit = 0.0
@@ -180,7 +179,7 @@ class Portfolio:
             profit_part_outside_tax_free_allowance = profit_minus_loss_pot - profit_part_in_tax_free_allowance
             self.remaining_yearly_tax_free_allowance -= profit_part_in_tax_free_allowance
             tax = profit_part_outside_tax_free_allowance * self.capital_yields_tax_percentage / 100.0
-        return returned_money - transaction_costs - tax
+        return returned_money - transaction_costs - tax, tax, transaction_costs
 
     def next_month(self):
         """
@@ -210,5 +209,5 @@ if __name__ == '__main__':
     portfolio.buy(money=100, cost_buy=1)
     portfolio.next_month()
     for _ in range(5):
-        rm = portfolio.sell(100, 1)
-        print(portfolio.current_total_value, rm)
+        rm, t, c = portfolio.sell(100, 1)
+        print(portfolio.current_total_value, rm, t, c)
