@@ -68,7 +68,7 @@ def sidebar() -> SidebarResults:
         extract_all_at_once = st.toggle("Einmaliger Verkauf", value=False, disabled=True)
         monthly_payoff = st.number_input("Monatlicher Auszahlbetrag (€)", min_value=0, step=100, value=100)
     with st.sidebar.expander("Simulation"):
-        duration_simulation = st.number_input("Maximale Simulationsdauer (Jahre)", min_value=1, step=10, value=40,
+        duration_simulation = st.number_input("Maximale Simulationsdauer (Jahre)", min_value=1, step=10, value=60,
                                               max_value=100)
         simulation_model = st.selectbox("Simulationsmodell", options=SimulationModel)
         # Add parameters dependent on the simulation type
