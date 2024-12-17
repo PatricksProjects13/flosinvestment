@@ -52,7 +52,7 @@ def sidebar() -> SidebarResults:
         costs_sell_absolute = st.number_input("Kosten Verkauf Aktie/ETF (€)", min_value=0.0, step=1.0, value=1.0)
         yearly_interest_rate_on_reserves = st.number_input("Zinsen Tagesgeld (%)", step=1.0, value=2.0, min_value=0.0)
         duration_accumulation_phase_in_years = st.number_input("Dauer Ansparphase (Jahre)", min_value=1, step=10,
-                                                               value=20)
+                                                               value=30)
     with st.sidebar.expander("Inflation und Steuern"):
         include_inflation = st.toggle("Inflation", value=False, disabled=True)
         if include_inflation:
