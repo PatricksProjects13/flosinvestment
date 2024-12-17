@@ -47,7 +47,7 @@ class SavingPlanInvestmentStrategy:
                                               )
         self.history = pd.DataFrame({"Wert Tagesgeld + ETF": [self.reserves],
                                      "Eingezahlt (kumulativ)": [0],
-                                     "Ausgezahlter (kumulativ)": [0],
+                                     "Ausgezahlt (kumulativ)": [0],
                                      "Steuern (kumulativ)": [0],
                                      "Kosten (kumulativ)": [0],
                                      }, index=[0])  # Monthly current_value of the total wealth.
@@ -68,6 +68,7 @@ class SavingPlanInvestmentStrategy:
             returned_money = 0.0
             tax = 0.0
             transaction_costs = 0.0
+            initial_reserves = self.reserves
             # Update reserve
             monthly_interest_rate_on_reserves = convert_yearly_interest_to_monthly(
                 self.yearly_interest_rate_on_reserves)
@@ -79,7 +80,7 @@ class SavingPlanInvestmentStrategy:
                 # Sparphase
                 payed_money = 0.0
                 if month_idx == 1:
-                    payed_money += self.reserves
+                    payed_money += initial_reserves
                     self.portfolio.buy(money=self.initial_savings, cost_buy=self.costs_buy_absolute)
                     transaction_costs += self.costs_buy_absolute
                     payed_money += self.initial_savings
