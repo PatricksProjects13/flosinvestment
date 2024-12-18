@@ -1,11 +1,77 @@
 import pandas as pd
 
 from backend.portfolio import Portfolio
-from backend.simulation import AbstractSimulationModel
+from backend.simulation import AbstractSimulationModel, DeterministicSimulationModel, \
+    SimpleNormalDistributionSimulationModel
 from backend.utils import convert_yearly_interest_to_monthly
+from backend.constants import Strategy, SimulationModel
+
+from ui.data_interface import SidebarResults
+from abc import ABC, abstractmethod
+
+from ui.sidebar import sidebar
 
 
-class SavingPlanInvestmentStrategy:
+class AbstractStrategy(ABC):
+    @abstractmethod
+    def simulate(self):
+        pass
+
+    @property
+    def payed_money_total(self) -> float:
+        return self.history.iloc[-1]["Eingezahlt (kumulativ)"]
+
+    @property
+    def returned_money_total(self) -> float:
+        return self.history.iloc[-1]["Ausgezahlt (kumulativ)"]
+
+    @property
+    def payed_tax_total(self) -> float:
+        return self.history.iloc[-1]["Steuern (kumulativ)"]
+
+    @property
+    def payed_costs_total(self) -> float:
+        return self.history.iloc[-1]["Kosten (kumulativ)"]
+
+
+class StrategyFactory:
+    def __init__(self, sidebar_results: SidebarResults):
+        self.sidebar_results = sidebar_results
+
+    def _get_simulation_model(self) -> AbstractSimulationModel:
+        if self.sidebar_results.simulation_model == SimulationModel.DETERMINISTIC:
+            return DeterministicSimulationModel(
+                yearly_interest_rate=self.sidebar_results.deterministic_simulation_parameters.yearly_interest_rate)
+        elif self.sidebar_results.simulation_model == SimulationModel.SIMPLE_NORMAL_DISTRIBUTION:
+            return SimpleNormalDistributionSimulationModel(
+                average_yearly_interest_rate=self.sidebar_results.simple_normal_distribution_simulation_parameters.average_yearly_interest_rate,
+                sigma=self.sidebar_results.simple_normal_distribution_simulation_parameters.sigma)
+        else:
+            raise NotImplementedError(f"Unknown simulation model: {self.sidebar_results.simulation_model}")
+
+    def get_strategy(self) -> AbstractStrategy:
+        sidebar_results = self.sidebar_results
+        if sidebar_results.strategy == Strategy.SAVINGS_PLAN:
+            strategy = SavingPlanInvestmentStrategy(monthly_savings=sidebar_results.monthly_savings,
+                                                    initial_savings=sidebar_results.initial_savings,
+                                                    reserves=sidebar_results.reserves,
+                                                    monthly_savings_reserves=sidebar_results.monthly_savings_reserves,
+                                                    yearly_interest_rate_on_reserves=sidebar_results.yearly_interest_rate_on_reserves,
+                                                    yearly_tax_free_allowance=sidebar_results.yearly_tax_free_allowance,
+                                                    capital_yields_tax_percentage=sidebar_results.capital_yields_tax_percentage,
+                                                    duration_simulation=sidebar_results.duration_simulation,
+                                                    simulation_model=self._get_simulation_model(),
+                                                    costs_buy_absolute=sidebar_results.costs_buy_absolute,
+                                                    costs_sell_absolute=sidebar_results.costs_sell_absolute,
+                                                    duration_accumulation_phase_in_years=sidebar_results.duration_accumulation_phase_in_years,
+                                                    extract_all_at_once=sidebar_results.extract_all_at_once,
+                                                    monthly_payoff=sidebar_results.monthly_payoff)
+        else:
+            raise NotImplementedError(f"Strategy {sidebar_results.strategy} not implemented")
+        return strategy
+
+
+class SavingPlanInvestmentStrategy(AbstractStrategy):
     def __init__(self,
                  monthly_savings: int,
                  initial_savings: int,
