@@ -38,8 +38,12 @@ def main_bar(sidebar_results: SidebarResults):
             quantil_value = returned_values.quantile(quantil / 100)
             strategy = \
                 list(sorted(strategies, key=lambda strategy: abs(strategy.returned_money_total - quantil_value)))[0]
+        all_total_value_histories = pd.DataFrame(
+            {i: strategy.history["Wert Tagesgeld + ETF"] for i, strategy in enumerate(strategies)})
+        st.line_chart(all_total_value_histories, use_container_width=True)
     else:
         st.error(f"Das Simulationsmodell {sidebar_results.simulation_model} ist noch nicht implementiert")
+    #
     # Plot results
     col1, col2 = st.columns(2)
     with col1:
@@ -50,11 +54,6 @@ def main_bar(sidebar_results: SidebarResults):
                   delta=f"{(strategy.returned_money_total - strategy.payed_money_total) / strategy.payed_money_total * 100:.0f}%")
         st.metric("Kosten", value=f'{strategy.payed_costs_total:.2f} €')
     #
-    all_total_value_histories = pd.DataFrame(
-        {i: strategy.history["Wert Tagesgeld + ETF"] for i, strategy in enumerate(strategies)})
-    # st.dataframe(all_total_value_histories)
-    #
-    st.line_chart(all_total_value_histories, use_container_width=True)
     st.line_chart(strategy.history, use_container_width=True, x_label="Monate", y_label="Wert (€)")
     st.dataframe(strategy.history, use_container_width=True)
 
