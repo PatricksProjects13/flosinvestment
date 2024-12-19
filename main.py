@@ -3,7 +3,7 @@ import streamlit as st
 
 from backend.constants import SimulationModel
 from backend.strategy import StrategyFactory
-from frontend.caching import get_simulated_strategies, get_quantil_strategy, get_average_strategy, get_median_strategy
+from frontend.computations import get_simulated_strategies, get_quantil_strategy, get_average_strategy, get_median_strategy
 from frontend.data_interface import SidebarResults
 from frontend.sidebar import sidebar
 
