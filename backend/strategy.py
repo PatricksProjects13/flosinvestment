@@ -6,10 +6,10 @@ from backend.simulation import AbstractSimulationModel, DeterministicSimulationM
 from backend.utils import convert_yearly_interest_to_monthly
 from backend.constants import Strategy, SimulationModel
 
-from ui.data_interface import SidebarResults
+from frontend.data_interface import SidebarResults
 from abc import ABC, abstractmethod
 
-from ui.sidebar import sidebar
+from frontend.sidebar import sidebar
 
 
 class AbstractStrategy(ABC):

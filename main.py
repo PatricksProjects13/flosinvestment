@@ -1,23 +1,11 @@
-import numpy as np
 import pandas as pd
 import streamlit as st
 
 from backend.constants import SimulationModel
-from backend.strategy import StrategyFactory, AbstractStrategy
-from ui.data_interface import SidebarResults
-from ui.sidebar import sidebar
-
-
-@st.cache_data(show_spinner=False, ttl=60 * 60)
-def get_simulated_strategies(sidebar_results: SidebarResults) -> list[AbstractStrategy]:
-    strategies = [StrategyFactory(sidebar_results=sidebar_results).get_strategy() for _ in
-                  range(sidebar_results.simple_normal_distribution_simulation_parameters.number_of_simulations)]
-    progressbar = st.progress(0)
-    for i, strategy in enumerate(strategies):
-        strategy.simulate()
-        progressbar.progress((i + 1) / len(strategies), text=f"Simuliere. Simulation Nummer {i + 1}")
-    progressbar.empty()
-    return strategies
+from backend.strategy import StrategyFactory
+from frontend.caching import get_simulated_strategies, get_quantil_strategy, get_average_strategy, get_median_strategy
+from frontend.data_interface import SidebarResults
+from frontend.sidebar import sidebar
 
 
 def main_bar(sidebar_results: SidebarResults):
@@ -33,20 +21,11 @@ def main_bar(sidebar_results: SidebarResults):
         if result_type == "Quantil":
             quantil = st.number_input("Quantil (%)", min_value=0, max_value=100, value=50, step=5)
         if result_type == "Durchschnitt":
-            histories = [strategy.history for strategy in strategies]
-            history = pd.DataFrame(columns=histories[0].columns,
-                                   data=np.mean([h.to_numpy() for h in histories], axis=0))
-            strategy = StrategyFactory(sidebar_results=sidebar_results).get_strategy()
-            strategy.history = history
+            strategy = get_average_strategy(sidebar_results, strategies)
         elif result_type == "Median":
-            returned_values = pd.Series([strategy.returned_money_total for strategy in strategies])
-            median = returned_values.median()
-            strategy = list(sorted(strategies, key=lambda strategy: abs(strategy.returned_money_total - median)))[0]
+            strategy = get_median_strategy(strategies)
         elif result_type == "Quantil":
-            returned_values = pd.Series([strategy.returned_money_total for strategy in strategies])
-            quantil_value = returned_values.quantile(quantil / 100)
-            strategy = \
-                list(sorted(strategies, key=lambda strategy: abs(strategy.returned_money_total - quantil_value)))[0]
+            strategy = get_quantil_strategy(quantil, strategies)
     else:
         st.error(f"Das Simulationsmodell {sidebar_results.simulation_model} ist noch nicht implementiert")
     #

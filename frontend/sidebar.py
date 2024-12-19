@@ -1,7 +1,7 @@
 import streamlit as st
 
 from backend.constants import Strategy, SimulationModel
-from ui.data_interface import SidebarResults, DeterministicSimulationParameters, \
+from frontend.data_interface import SidebarResults, DeterministicSimulationParameters, \
     SimpleNormalDistributionSimulationParameters
 
 

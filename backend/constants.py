@@ -9,3 +9,4 @@ class SimulationModel(StrEnum):
 class Strategy(StrEnum):
     SAVINGS_PLAN = "Sparplan"
     FLO = "Flo"
+
