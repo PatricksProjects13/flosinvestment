@@ -111,23 +111,24 @@ class SavingPlanInvestmentStrategy(AbstractStrategy):
                                               init_month=1,
                                               init_year=2024
                                               )
-        self.history = pd.DataFrame({"Wert Tagesgeld + ETF": [self.reserves],
-                                     "Eingezahlt (kumulativ)": [0],
-                                     "Ausgezahlt (kumulativ)": [0],
-                                     "Steuern (kumulativ)": [0],
-                                     "Kosten (kumulativ)": [0],
-                                     }, index=[0])  # Monthly current_value of the total wealth.
+        self.history = pd.DataFrame({"Wert Tagesgeld + ETF": [self.reserves] + [0] * (self.duration_simulation * 12),
+                                     "Eingezahlt (kumulativ)": [0] * (self.duration_simulation * 12 + 1),
+                                     "Ausgezahlt (kumulativ)": [0] * (self.duration_simulation * 12 + 1),
+                                     "Steuern (kumulativ)": [0] * (self.duration_simulation * 12 + 1),
+                                     "Kosten (kumulativ)": [0] * (self.duration_simulation * 12 + 1),
+                                     }, index=range(
+            self.duration_simulation * 12 + 1), dtype="float64")  # Monthly current_value of the total wealth.
         # Convention: 1: (savings after 1 month + rate)
         # Order of actions in month m: Measure current_value, (extract all at once), add savings/ subtract payoff, add interest rate
 
-    def _add_entry_in_history(self, value: float, payed: float, payoff: float, tax: float, costs: float):
-        last_row = self.history.iloc[-1].to_list()
+    def _add_entry_in_history(self, month: int, value: float, payed: float, payoff: float, tax: float, costs: float):
+        last_row = self.history.iloc[month - 1].to_list()
         last_value, last_payed, last_payoff, last_tax, last_costs = last_row
-        self.history.loc[self.history.index.max() + 1] = [value,
-                                                          payed + last_payed,
-                                                          payoff + last_payoff,
-                                                          tax + last_tax,
-                                                          costs + last_costs]
+        self.history.iloc[month] = [value,
+                                    payed + last_payed,
+                                    payoff + last_payoff,
+                                    tax + last_tax,
+                                    costs + last_costs]
 
     def simulate(self):
         for month_idx in range(1, self.duration_simulation * 12 + 1):
@@ -168,7 +169,8 @@ class SavingPlanInvestmentStrategy(AbstractStrategy):
                     returned_money = min(self.reserves, self.monthly_payoff)
                     self.reserves -= returned_money
             self.portfolio.next_month()
-            self._add_entry_in_history(value=self.reserves + self.portfolio.current_total_value,
+            self._add_entry_in_history(month=month_idx,
+                                       value=self.reserves + self.portfolio.current_total_value,
                                        payed=payed_money,
                                        payoff=returned_money,
                                        tax=tax,
