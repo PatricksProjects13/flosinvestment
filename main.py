@@ -22,11 +22,13 @@ def tab_overview(tab, strategy: StrategyFactory):
             st.metric("Kosten", value=f'{strategy.payed_costs_total:.2f} €')
         st.line_chart(strategy.history, use_container_width=True, x_label="Monate", y_label="Wert (€)")
 
+
 def tab_simulation_results(tab, strategies: list[StrategyFactory]):
     with tab:
         all_total_value_histories = pd.DataFrame(
             {i: strategy.history["Wert Tagesgeld + ETF"] for i, strategy in enumerate(strategies)})
         st.line_chart(all_total_value_histories, use_container_width=True)
+
 
 def tab_data(tab, strategy: StrategyFactory):
     with tab:
@@ -39,6 +41,7 @@ def deterministic_main_bar(sidebar_results: SidebarResults):
     tab1, tab2 = st.tabs(["Übersicht", "Daten"])
     tab_overview(tab1, strategy)
     tab_data(tab2, strategy)
+
 
 def simple_normal_distribution_main_bar(sidebar_results: SidebarResults):
     strategies = get_simulated_strategies(sidebar_results)
