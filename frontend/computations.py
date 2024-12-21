@@ -1,3 +1,5 @@
+from math import floor
+
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -6,6 +8,7 @@ from backend.strategy import AbstractStrategy, StrategyFactory
 from frontend.data_interface import SidebarResults
 
 CACHE_TTL_SECONDS = 60 * 60
+
 
 @st.cache_data(show_spinner=False, ttl=CACHE_TTL_SECONDS)
 def get_simulated_strategies(sidebar_results: SidebarResults) -> list[AbstractStrategy]:
@@ -31,12 +34,15 @@ def get_simulated_strategies(sidebar_results: SidebarResults) -> list[AbstractSt
     return strategies
 
 
-def get_quantil_strategy(quantil: int, strategies: list[AbstractStrategy]) -> AbstractStrategy:
-    returned_values = pd.Series([strategy.returned_money_total for strategy in strategies])
-    quantil_value = returned_values.quantile(quantil / 100)
-    strategy = \
-        list(sorted(strategies, key=lambda strategy: abs(strategy.returned_money_total - quantil_value)))[0]
-    return strategy
+def get_percentile_strategy(percentile: int,
+                            weight_return_value: int,
+                            strategies: list[AbstractStrategy]) -> AbstractStrategy:
+    index_percentile = floor(percentile / 100 * len(strategies))
+
+    sorted_strategies = list(sorted(strategies, key=lambda
+        strategy: strategy.returned_money_total * weight_return_value + strategy.remaining_value * (
+            1 - weight_return_value)))
+    return sorted_strategies[index_percentile]
 
 
 def get_average_strategy(sidebar_results: SidebarResults, strategies: list[AbstractStrategy]) -> AbstractStrategy:
@@ -48,8 +54,5 @@ def get_average_strategy(sidebar_results: SidebarResults, strategies: list[Abstr
     return strategy
 
 
-def get_median_strategy(strategies: list[AbstractStrategy]) -> AbstractStrategy:
-    returned_values = pd.Series([strategy.returned_money_total for strategy in strategies])
-    median = returned_values.median()
-    strategy = list(sorted(strategies, key=lambda strategy: abs(strategy.returned_money_total - median)))[0]
-    return strategy
+def get_median_strategy(strategies: list[AbstractStrategy], weight_return_value: int) -> AbstractStrategy:
+    return get_percentile_strategy(50, weight_return_value, strategies)

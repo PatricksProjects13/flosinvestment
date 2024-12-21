@@ -33,6 +33,10 @@ class AbstractStrategy(ABC):
     def payed_costs_total(self) -> float:
         return self.history.iloc[-1]["Kosten (kumulativ)"]
 
+    @property
+    def remaining_value(self) -> float:
+        return self.history.iloc[-1]["Wert Tagesgeld + ETF"]
+
 
 class StrategyFactory:
     def __init__(self, sidebar_results: SidebarResults):

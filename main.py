@@ -3,7 +3,7 @@ import streamlit as st
 
 from backend.constants import SimulationModel
 from backend.strategy import StrategyFactory
-from frontend.computations import get_simulated_strategies, get_quantil_strategy, get_average_strategy, \
+from frontend.computations import get_simulated_strategies, get_percentile_strategy, get_average_strategy, \
     get_median_strategy
 from frontend.data_interface import SidebarResults
 from frontend.sidebar import sidebar
@@ -45,15 +45,17 @@ def deterministic_main_bar(sidebar_results: SidebarResults):
 
 def simple_normal_distribution_main_bar(sidebar_results: SidebarResults):
     strategies = get_simulated_strategies(sidebar_results)
-    result_type = st.selectbox("Wähle eine Realisierung", options=["Durchschnitt", "Median", "Quantil"])
-    if result_type == "Quantil":
-        quantil = st.number_input("Quantil (%)", min_value=0, max_value=100, value=50, step=5)
+    result_type = st.selectbox("Wähle eine Realisierung", options=["Durchschnitt", "Median", "Percentil"])
+    weight_return_value = st.slider("Gewichtung Ausgezahlter Betrag (vs. Restwert Portfolio)", min_value=0.0, max_value=1.0, step=0.1,
+                                    value=0.9)
+    if result_type == "Percentil":
+        percentile = st.number_input("Percentil (%)", min_value=0, max_value=100, value=50, step=5)
     if result_type == "Durchschnitt":
         strategy = get_average_strategy(sidebar_results, strategies)
     elif result_type == "Median":
-        strategy = get_median_strategy(strategies)
-    elif result_type == "Quantil":
-        strategy = get_quantil_strategy(quantil, strategies)
+        strategy = get_median_strategy(strategies, weight_return_value)
+    elif result_type == "Percentil":
+        strategy = get_percentile_strategy(percentile, weight_return_value, strategies)
     tab1, tab2, tab3 = st.tabs(["Übersicht", "Simulationsergebnisse", "Daten"])
     tab_overview(tab1, strategy)
     tab_simulation_results(tab2, strategies)
