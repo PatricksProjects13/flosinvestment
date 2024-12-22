@@ -21,7 +21,7 @@ def get_simulated_strategies(sidebar_results: SidebarResults) -> list[AbstractSt
 
     :param sidebar_results: User-defined parameters for the simulation process.
     :type sidebar_results: SidebarResults
-    :return: A list of simulated strategies derived from the given parameters.
+    :return: current_stock_price list of simulated strategies derived from the given parameters.
     :rtype: list[AbstractStrategy]
     """
     strategies = [StrategyFactory(sidebar_results=sidebar_results).get_strategy() for _ in

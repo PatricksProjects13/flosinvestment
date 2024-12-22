@@ -2,7 +2,7 @@ import streamlit as st
 
 from backend.constants import Strategy, SimulationModel
 from frontend.data_interface import SidebarResults, DeterministicSimulationParameters, \
-    SimpleNormalDistributionSimulationParameters
+    SimpleNormalDistributionSimulationParameters, FloStrategyParameters
 
 
 def sidebar() -> SidebarResults:
@@ -18,6 +18,30 @@ def sidebar() -> SidebarResults:
         yearly_interest_rate_on_reserves = st.number_input("Zinsen Tagesgeld (%)", step=1.0, value=2.0, min_value=0.0)
         duration_accumulation_phase_in_years = st.number_input("Dauer Ansparphase (Jahre)", min_value=1, step=10,
                                                                value=30)
+    if strategy == Strategy.FLO:
+        with st.sidebar.expander("Flo Parameter"):
+            initial_stock_prize = st.number_input("Initialer Aktienpreis", min_value=0.0001, step=1.0,
+                                                  value=100.0)
+            target_number_of_stocks = st.number_input("Zielmenge Aktien", min_value=1, value=120, step=10)
+            duration_months_for_rolling_average_stock_prize = st.number_input(
+                "Anzahl Monate zur Ermittlung des durchschnittlichen Aktienpreises", min_value=1, step=1, max_value=24,
+                value=4)
+            step_size = st.number_input("'Stufenschritt'", min_value=1, value=20, step=5)
+            prize_step_size = st.number_input("'Kursstufen'", min_value=1, value=4, step=1)
+            average_yearly_interest_rate = st.number_input("Durchschnittliche jährlicher Zinssatz Aktie (%)",
+                                                           min_value=0.0,
+                                                           max_value=100.0,
+                                                           value=5.0, step=1.0)
+            sigma = st.number_input("Volatilität", min_value=0.0, value=2.0, step=1.0)
+            flo_strategy_parameters = FloStrategyParameters(initial_stock_prize=initial_stock_prize,
+                                                            target_number_of_stocks=target_number_of_stocks,
+                                                            duration_months_for_rolling_average_stock_prize=duration_months_for_rolling_average_stock_prize,
+                                                            prize_step_size=prize_step_size,
+                                                            step_size=step_size,
+                                                            average_yearly_interest_rate=average_yearly_interest_rate,
+                                                            sigma=sigma)
+    else:
+        flo_strategy_parameters = None
     with st.sidebar.expander("Inflation und Steuern"):
         include_inflation = st.toggle("Inflation", value=False, disabled=True)
         if include_inflation:
@@ -48,13 +72,16 @@ def sidebar() -> SidebarResults:
             average_yearly_interest_rate = st.number_input("Durchschnittliche jährlicher Zinssatz Aktie (%)",
                                                            min_value=0.0,
                                                            max_value=100.0,
-                                                           value=5.0, step=1.0)
-            sigma = st.number_input("Volatilität", min_value=0.0, value=2.0, step=1.0)
+                                                           value=5.0,
+                                                           step=1.0,
+                                                           key="Flo yearly average interest rate")
+            sigma = st.number_input("Volatilität", min_value=0.0, value=2.0, step=1.0, key="Flo sigma")
             number_of_simulations = st.number_input("Anzahl der Simulationen", min_value=1, step=100, value=100,
                                                     max_value=10000)
             deterministic_simulation_parameters = None
             simple_normal_distribution_simulation_parameters = SimpleNormalDistributionSimulationParameters(
-                average_yearly_interest_rate=average_yearly_interest_rate, sigma=sigma,
+                average_yearly_interest_rate=average_yearly_interest_rate,
+                sigma=sigma,
                 number_of_simulations=number_of_simulations)
 
         else:
@@ -80,6 +107,7 @@ def sidebar() -> SidebarResults:
                                      duration_simulation=duration_simulation,
                                      simulation_model=simulation_model,
                                      deterministic_simulation_parameters=deterministic_simulation_parameters,
-                                     simple_normal_distribution_simulation_parameters=simple_normal_distribution_simulation_parameters
+                                     simple_normal_distribution_simulation_parameters=simple_normal_distribution_simulation_parameters,
+                                     flo_strategy_parameters=flo_strategy_parameters
                                      )
     return sidebar_results

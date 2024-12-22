@@ -44,15 +44,16 @@ class Portfolio:
                  updater: Callable[[float], float],  # Updated den Aktienpreis für den nächsten Monat
                  yearly_tax_free_allowance: float = 1000,  # Steuerfreibetrag
                  capital_yields_tax_percentage: int = 25,  # Kapitalertragssteuer
+                 init_share_prize_per_unit: float = 1,  # Initialer Wert Aktie
                  init_month: int = 1,
                  init_year: int = 2024):
         """
-        This class simulates a portfolio of shares.
+        This class simulates a etf of shares.
 
-        It sets up the initial conditions for the portfolio by defining the starting
+        It sets up the initial conditions for the etf by defining the starting
         month, year, and tax-related details such as the yearly tax-free allowance,
         capital yields tax percentage, and initializes various attributes to manage
-        portfolio shares and losses.
+        etf shares and losses.
 
         :param updater: Callable to update the stock price for the next month.
         :param yearly_tax_free_allowance: The tax-free allowance provided
@@ -72,7 +73,7 @@ class Portfolio:
         self.remaining_yearly_tax_free_allowance = yearly_tax_free_allowance
         self.yearly_loss_pot = 0.0  # Verlusttopf
         self.capital_yields_tax_percentage = capital_yields_tax_percentage
-        self.share_prize_per_unit = SharePrize(1)  # The initial current_value is not important
+        self.share_prize_per_unit = SharePrize(init_share_prize_per_unit)  # The initial current_value is not important
 
     @property
     def current_total_value(self) -> float:
@@ -138,7 +139,7 @@ class Portfolio:
         :type target_money_sell: float
         :param transaction_costs: Costs associated with executing the transaction.
         :type transaction_costs: float
-        :return: A tuple, containing the returned money, the payed taxes and the amount of transaction costs.
+        :return: current_stock_price tuple, containing the returned money, the payed taxes and the amount of transaction costs.
         :rtype: tuple[float, float, float]
         """
         # If selling costs more than the target return or no shares, sell nothing

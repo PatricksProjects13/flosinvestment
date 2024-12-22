@@ -16,6 +16,17 @@ class SimpleNormalDistributionSimulationParameters:
 
 
 @dataclass
+class FloStrategyParameters:
+    initial_stock_prize: float  # Anfänglicher Aktienpreis
+    target_number_of_stocks: int  # Zielgröße, wie viele Aktien (bei mittlerem Preis besessen werden sollen)
+    duration_months_for_rolling_average_stock_prize: int  # Anzahl an Monate, über die der Aktienpreis gemittelt werden soll
+    step_size: int  # Sogenannter Stufenschritt in Flos Modell. Im Grund ein Multiplikator. um aus Kursabweichungen Aktienmengen zu berechnen
+    prize_step_size: int  # Diskretisierung von Kursschwankungen
+    average_yearly_interest_rate: float  # Durchschnittlicher jährlicher Zinssatz
+    sigma: float  # Vola
+
+
+@dataclass
 class SidebarResults:
     strategy: Strategy  # Nach welchem Modell soll Geld gespart werden, Sparer, Flo,...
     monthly_savings: int  # Monatliche Sparrate in Aktien/ETFs
@@ -36,3 +47,4 @@ class SidebarResults:
     duration_simulation: int = 40  # Maximale Dauer der Simulation in Jahren
     deterministic_simulation_parameters: DeterministicSimulationParameters | None = None  # Simulationsspezifische Parameter
     simple_normal_distribution_simulation_parameters: SimpleNormalDistributionSimulationParameters | None = None  # Simulationsspezifische Parameter
+    flo_strategy_parameters: FloStrategyParameters | None = None
