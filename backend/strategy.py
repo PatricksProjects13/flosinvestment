@@ -372,6 +372,7 @@ class FloInvestmentStrategy(AbstractStrategy):
                     self.reserves -= returned_money
             self.etf.next_month()
             self.stock.next_month()
+            prize_que.append(self.stock.share_prize_per_unit.value)
             self._add_entry_in_history(month=month_idx,
                                        value=self.reserves + self.etf.current_total_value + self.stock.current_total_value,
                                        payed=payed_money,
